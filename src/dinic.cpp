@@ -1,6 +1,7 @@
 #include <dinic.h>
 #include <cstring>
 #include <algorithm>
+#include <common.h>
 
 using std::min;
 
@@ -39,6 +40,7 @@ int DinicFlowRouter::DFS(int u, int c) {
 }
 
 void DinicFlowRouter::solve() {
+	this->buildGraph();
 	this->d = new int[this->tn];
 	this->q = new int[this->tn];
 	int c(0), s(0);
@@ -63,3 +65,4 @@ void DinicFlowRouter::solve() {
 	delete [] this->q;
 }
 
+// REGISTERROUTER("dinic", DinicFlowRouter);

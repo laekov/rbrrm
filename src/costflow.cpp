@@ -35,6 +35,7 @@ bool CostFlowRouter::SPFA() {
 }
 
 void CostFlowRouter::solve() {
+	this->buildGraph();
 	this->fr = new int[this->tn];
 	this->q = new int[this->tn];
 	this->inq = new int[this->tn];

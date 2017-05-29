@@ -1,10 +1,12 @@
 cc = g++ -g -Isrc/include
 default : mkdir bin/main
-routers = obj/costflow.o obj/dinic.o obj/flow.o obj/router.o
+routers = obj/costflow.o obj/dinic.o obj/flow.o obj/router.o obj/routerlist.o
 bin/main : src/main.cpp obj/canvas.o $(routers)
 	$(cc) src/main.cpp obj/canvas.o $(routers) -o bin/main
 obj/costflow.o : src/include/costflow.h src/costflow.cpp
 	$(cc) -c src/costflow.cpp -o obj/costflow.o
+obj/routerlist.o : src/routerlist.cpp
+	$(cc) -c src/routerlist.cpp -o obj/routerlist.o
 obj/dinic.o : src/include/dinic.h src/dinic.cpp
 	$(cc) -c src/dinic.cpp -o obj/dinic.o
 obj/flow.o : src/include/flow.h src/flow.cpp

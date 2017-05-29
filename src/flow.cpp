@@ -53,15 +53,16 @@ FlowRouter::Edge* FlowRouter::addEdge(int u, int v, int c, int w) {
 }
 
 void FlowRouter::buildGraph() {
-	this->ebuf = this->epool = new Edge[n * m * 12];
+	this->clean();
+	this->ebuf = this->epool = new Edge[n * m * 24];
 	this->head = new Edge*[n * m * 6 + 3];
 	this->et = new Edge*[n * m * 6 + 3];
 	int tn(0);
-	memset(head, 0, sizeof(head));
+	memset(head, 0, sizeof(Edge*) * (n * m * 6 + 3));
 	this->st = ++ tn, this->te = ++ tn;
 	this->ni = new int*[this->n];
 	for (int i = 0; i < this->n; ++ i) {
-		this->ni[i] = new int[m];
+		this->ni[i] = new int[this->m];
 		for (int j = 0; j < this->m; ++ j) {
 			this->ni[i][j] = ++ tn, ++ tn;
 			this->addEdge(this->ni[i][j], this->ni[i][j] + 1, 1);
@@ -99,3 +100,23 @@ void FlowRouter::buildGraph() {
 	this->tn = tn + 1;
 }
 
+void FlowRouter::clean() {
+	if (this->epool) {
+		delete [] this->epool;
+		delete [] this->head;
+		delete [] this->et;
+		for (int i = 0; i < this->n; ++ i) {
+			delete [] this->ni[i];
+		}
+		delete [] this->ni;
+		for (int i = 0; i < this->n; ++ i) {
+			delete [] this->hi[i];
+		}
+		delete [] this->hi;
+		for (int i = 0; i + 1 < this->n; ++ i) {
+			delete [] this->vi[i];
+		}
+		delete [] this->vi;
+		this->epool = 0;
+	}
+}

@@ -1,0 +1,8 @@
+.DS_Store
+bin
+obj
+*.jpg
+*.ppm
+.in
+*.swp
+*.swo

@@ -16,27 +16,12 @@ class FlowRouter: public Router {
 		Edge* newEdge(int, int, int, int);
 		Edge* addEdge(int, int, int, int = 0);
 		void buildGraph();
+		void clean();
 	public:
 		void print(std::ostream&);
 		FlowRouter(): epool(0) {}
 		~FlowRouter() {
-			if (this->epool) {
-				delete [] this->epool;
-				delete [] this->head;
-				delete [] this->et;
-				for (int i = 0; i < this->n; ++ i) {
-					delete [] this->ni[i];
-				}
-				delete [] this->ni;
-				for (int i = 0; i < this->n; ++ i) {
-					delete [] this->hi[i];
-				}
-				delete [] this->hi;
-				for (int i = 0; i + 1 < this->n; ++ i) {
-					delete [] this->vi[i];
-				}
-				delete [] this->vi;
-			}
+			this->clean();
 		}
 };
 #endif
