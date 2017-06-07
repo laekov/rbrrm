@@ -1,3 +1,9 @@
+for ((i=2;i<=40;++i))
+do
+	./main -n $i 2>.err
+	rm .err
+done
+exit
 for ((i=2;i<=20;++i))
 do
 	echo Running main

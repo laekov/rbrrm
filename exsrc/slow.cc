@@ -1,8 +1,9 @@
 #include <bits/stdc++.h>
+#include <canvas.h>
 
 using namespace std;
 
-const int maxa = 103;
+const int maxa = 303;
 const int maxn = maxa * maxa * 13;
 const int maxe = maxn * 10;
 const int inf = 0x3f3f3f3f;
@@ -32,7 +33,7 @@ Edge* addEdge(int u, int v, int c, int w = 0) {
 bool dinicBFS() {
 	static int q[maxn];
 	int hd(0), tl(1);
-	memset(d, 0, sizeof(int) * tn);
+	memset(d, 0, sizeof(d));
 	d[q[hd] = st] = 1;
 	while (hd < tl && !d[te]) {
 		int u(q[hd ++]);
@@ -74,9 +75,9 @@ bool check(int w, int nx) {
 	for (int i = 0; i <= n; ++ i) {
 		for (int j = 0; j <= m; ++ j) {
 			ni[i][j] = ++ tn, ++ tn;
-			addEdge(ni[i][j], ni[i][j] + 1, w);
+			addEdge(ni[i][j], ni[i][j] + 1, 1);
 			if (i == 0 || i == n || j == 0 || j == m) {
-				addEdge(ni[i][j], te, 1);
+				addEdge(ni[i][j] + 1, te, 1);
 			}
 			if (i % w == 0 && j % w == 0) {
 				addEdge(st, ni[i][j], 1);
@@ -112,6 +113,40 @@ bool check(int w, int nx) {
 	return res;
 }
 
+void print(int n, int m, int w) {
+	ofstream fout("out.ppm");
+	int bls = 1366 / max(n, m);
+	int rr = max(bls / 7, 1);
+	Canvas c(bls * (n - 1) + rr * 2, bls * (m - 1) + rr * 2);
+	c.lineWid = min(c.lineWid, rr / 2);
+	for (int i = 0; i < n; ++ i) {
+		for (int j = 0; j < m; ++ j) {
+			int co(1);
+			if (i == 0 || i == n - 1 || j == 0 || j == m - 1) {
+				co = 3;
+			} else if (i % w == 0 && j % w == 0) {
+				co = 4;
+			}
+			c.circ(i * bls + rr, j * bls + rr, rr, co);
+		}
+	}
+	for (int i = 0; i < n; ++ i) {
+		for (int j = 0; j + 1 < m; ++ j) {
+			if (et[hi[i][j]]->rv->c) {
+				c.line(i * bls + rr, j * bls + rr * 2, i * bls + rr, j * bls + bls, 2);
+			}
+		}
+	}
+	for (int i = 0; i + 1 < n; ++ i) {
+		for (int j = 0; j < m; ++ j) {
+			if (et[vi[i][j]]->rv->c) {
+				c.line(i * bls + rr * 2, j * bls + rr, i * bls + bls, j * bls + rr, 2);
+			}
+		}
+	}
+	c.write(fout);
+}
+
 int binarySearch(int n) {
 	int l(n / 16), r((n + 1));
 	while (l < r) {
@@ -122,6 +157,8 @@ int binarySearch(int n) {
 			l = mid + 1;
 		}
 	}
+//	check(l, n);
+//	print((l + 1) * n + 1, (l + 1) * n + 1, l + 1);
 	return l;
 }
 

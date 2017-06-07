@@ -13,7 +13,7 @@ struct Edge {
 };
 Edge epool[maxe], *ebuf, *head[maxn], *et[maxn];
 int st, te, tn, n, d[maxn];
-int ni[maxa][maxa], hi[maxa][maxa], vi[maxa][maxa], pi[maxa][maxa];
+int ni[maxa][maxa], hi[maxa][maxa], vi[maxa][maxa], pi[maxa][maxa], si[maxa][maxa];
 
 Edge* newEdge(int u, int v, int c, int w) {
 	ebuf->t = v;
@@ -32,7 +32,7 @@ Edge* addEdge(int u, int v, int c, int w = 0) {
 bool dinicBFS() {
 	static int q[maxn];
 	int hd(0), tl(1);
-	memset(d, 0, sizeof(int) * tn);
+	memset(d, 0, sizeof(d));
 	d[q[hd] = st] = 1;
 	while (hd < tl && !d[te]) {
 		int u(q[hd ++]);
@@ -73,7 +73,7 @@ bool check(int w, int n) {
 	for (int i = 0; i < n; ++ i) {
 		for (int j = 0; j < m; ++ j) {
 			ni[i][j] = ++ tn, ++ tn;
-			addEdge(ni[i][j], ni[i][j] + 1, w);
+			et[ni[i][j]] = addEdge(ni[i][j], ni[i][j] + 1, w);
 		}
 	}
 	for (int i = 0; i <= n; ++ i) {
@@ -114,12 +114,12 @@ bool check(int w, int n) {
 	}
 	for (int i = 1; i < n; ++ i) {
 		for (int j = 1; j < m; ++ j) {
-			++ tn;
-			addEdge(st, tn, 1);
-			addEdge(tn, vi[i - 1][j], 1);
-			addEdge(tn, vi[i][j], 1);
-			addEdge(tn, hi[i][j - 1], 1);
-			addEdge(tn, hi[i][j], 1);
+			si[i][j] = ++ tn;
+			et[si[i][j]] = addEdge(st, tn, 1);
+			addEdge(si[i][j], vi[i - 1][j], 1);
+			addEdge(si[i][j], vi[i][j], 1);
+			addEdge(si[i][j], hi[i][j - 1], 1);
+			addEdge(si[i][j], hi[i][j], 1);
 		}
 	}
 	int c(0);
@@ -128,6 +128,29 @@ bool check(int w, int n) {
 	}
 	int res(c == (n - 1) * (m - 1));
 	fprintf(stderr, "Checking w = %d, expected = %d, escaped = %d, status = %s\n", w, (n - 1) * (m - 1), c, res ? "Escaped" : "Died");
+	if (0) {
+		for (int i = 0; i < n; ++ i) {
+			for (int j = 0; j < m; ++ j) {
+				if (i && j) {
+					printf("%c ", et[si[i][j]]->rv->c ? '.' : 'x');
+				} else {
+					printf("  ");
+				}
+				printf("%d ", et[hi[i][j]]->rv->c);
+			}
+			putchar(10);
+			for (int j = 0; j < m; ++ j) {
+				printf("%d %d ", et[vi[i][j]]->rv->c, et[ni[i][j]]->rv->c);
+			}
+			printf("%d", et[vi[i][m]]->rv->c);
+			putchar(10);
+		} {
+			for (int j = 0; j < m; ++ j) {
+				printf("  %d ", et[hi[n][j]]->rv->c);
+			}
+			putchar(10);
+		}
+	}
 	return res;
 }
 
