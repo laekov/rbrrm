@@ -13,8 +13,10 @@ struct Edge {
 	Edge *ne, *rv;
 };
 Edge epool[maxe], *ebuf, *head[maxn], *et[maxn];
+int vis[maxn], tvis;
 int st, te, tn, n, d[maxn];
 int ni[maxa][maxa], hi[maxa][maxa], vi[maxa][maxa], pi[maxa][maxa], si[maxa][maxa];
+int osa[maxn], ose[maxn];
 
 Edge* newEdge(int u, int v, int c, int w) {
 	ebuf->t = v;
@@ -33,18 +35,19 @@ Edge* addEdge(int u, int v, int c, int w = 0) {
 bool dinicBFS() {
 	static int q[maxn];
 	int hd(0), tl(1);
-	memset(d, 0, sizeof(d));
+	++ tvis;
 	d[q[hd] = st] = 1;
-	while (hd < tl && !d[te]) {
+	vis[st] = tvis;
+	while (hd < tl && vis[te] < tvis) {
 		int u(q[hd ++]);
 		for (Edge* e = head[u]; e; e = e->ne) {
-			if (e->c && !d[e->t]) {
+			if (e->c && vis[e->t] < tvis) {
 				d[e->t] = d[u] + 1;
-				q[tl ++] = e->t;
+				vis[q[tl ++] = e->t] = tvis;
 			}
 		}
 	}
-	return d[te];
+	return vis[te] == tvis;
 }
 
 int dinicDFS(int u, int c) {
@@ -53,7 +56,7 @@ int dinicDFS(int u, int c) {
 		return c;
 	}
 	for (Edge* e = head[u]; e && c; e = e->ne) {
-		if (e->c && d[e->t] == d[u] + 1) {
+		if (e->c && vis[e->t] == tvis && d[e->t] == d[u] + 1) {
 			int x(dinicDFS(e->t, min(c, e->c)));
 			e->c -= x, e->rv->c += x;
 			s += x, c -= x;
@@ -177,7 +180,7 @@ inline void addDoubleEdge(int u, int v, int c, int w = 0) {
 	addEdge(v + 1, u, c, w);
 }
 
-void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int rv) {
+void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* dp, int rv) {
 	memset(dv, 0, sizeof(dv));
 	memset(dh, 0, sizeof(dh));
 	int tno(tn);
@@ -213,23 +216,48 @@ void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int r
 	static const int mys[2][4] = { { 1, -1, 0, 0 }, { -1, 1, 0, 0 } };
 	for (int i = 0; i < 4; ++ i) {
 		int x(bxs[rv][i] * (w - 1)), y(bys[rv][i] * (w - 1));
-		for (int j = 0; j < dz[i] || j < dz[i + 4]; ++ j) {
-			if (dz[i]) {
-				addEdge(st, di[x][y], 1);
-			} else if (dz[i + 4]) {
-				addEdge(di[x][y] + 1, te, 1);
+		int *osap(osa), *osep(ose);
+		if (mxs[rv][i] == -1 || mys[rv][i] == -1) {
+			swap(osap, osep);
+		}
+		int e = max(dz[i], dz[i + 4]);
+		if (dz[i + 4]) {
+			if (osap[dp[i]]) {
+				++ e;
 			}
-			if (i == 0) {
-				dv[x][y] = 1;
-			} else if (i == 1) {
-				dv[x + 1][y] = 1;
-			} else if (i == 2) {
-				dh[x][y] = 1;
-			} else if (i == 3) {
-				dh[x][y + 1] = 1;
+			if (osep[dp[i]]) {
+				++ e;
+			}
+		}
+		for (int j = 0; j < e; ++ j) {
+			if (dz[i] || !((osap[dp[i]] && j == 0) || (osep[dp[i]] && j == e - 1))) {
+				if (dz[i]) {
+					addEdge(st, di[x][y], 1);
+				} else if (dz[i + 4]) {
+					addEdge(di[x][y] + 1, te, 1);
+				}
+				if (i == 0) {
+					dv[x][y] = 1;
+				} else if (i == 1) {
+					dv[x + 1][y] = 1;
+				} else if (i == 2) {
+					dh[x][y] = 1;
+				} else if (i == 3) {
+					dh[x][y + 1] = 1;
+				}
+			} else if (dz[i]) {
+				addEdge(st, di[x][y], 1);
 			}
 			x += mxs[rv][i];
 			y += mys[rv][i];
+		}
+		if (dz[i]) {
+			if (osap[dp[i]]) {
+				osap[dp[i]] = 1;
+			}
+			if (osep[dp[i]]) {
+				osep[dp[i]] = w + 1 - max(dz[i], dz[i + 4]);
+			}
 		}
 	}
 	while (dinicBFS()) {
@@ -284,9 +312,28 @@ void printPPM(int n, int w) {
 			c.circ(i * (w + 1) * bls, j * (w + 1) * bls, rr, 4);
 		}
 	}
+	memset(osa, 0, sizeof(osa));
+	memset(ose, 0, sizeof(ose));
+	for (int i = 1; i < n; ++ i) {
+		for (int j = 1; j < m; ++ j) {
+			for (Edge* e = head[si[i][j]]; e; e = e->ne) {
+				if (e->t != st && e->rv->c) {
+					if (e->t == vi[i - 1][j]) {
+						ose[vi[i - 1][j]] = -1;
+					} else if (e->t == hi[i][j]) {
+						osa[hi[i][j]] = -1;
+					} else if (e->t == vi[i][j]) {
+						osa[vi[i][j]] = -1;
+					} else if (e->t == hi[i][j - 1]) {
+						ose[hi[i][j - 1]] = -1;
+					}
+				}
+			}
+		}
+	}
 	for (int i = 0; i < n; ++ i) {
 		for (int j = 0; j < m; ++ j) {
-			int dz[8];
+			int dz[8], dp[4];
 			for (Edge* e = head[ni[i][j]]; e; e = e->ne) {
 				if (e->t == hi[i][j] + 1) {
 					dz[0] = e->c;
@@ -309,7 +356,11 @@ void printPPM(int n, int w) {
 					dz[7] = e->rv->c;
 				}
 			}
-			printGrid(c, w, i * (w + 1) * bls, j * (w + 1) * bls, bls, rr, dz, (i ^ j)& 1);
+			dp[0] = hi[i][j];
+			dp[1] = hi[i + 1][j];
+			dp[2] = vi[i][j];
+			dp[3] = vi[i][j + 1];
+			printGrid(c, w, i * (w + 1) * bls, j * (w + 1) * bls, bls, rr, dz, dp, (i ^ j)& 1);
 		}
 		fprintf(stderr, "Processing grid line %d\n", i);
 	}
@@ -317,17 +368,21 @@ void printPPM(int n, int w) {
 		for (int j = 1; j < m; ++ j) {
 			for (Edge* e = head[si[i][j]]; e; e = e->ne) {
 				if (e->t != st && e->rv->c) {
-					int px(0), py(0);
+					int px(0), py(0), le(0);
 					if (e->t == vi[i - 1][j]) {
 						px = -1;
+						le = ose[vi[i - 1][j]];
 					} else if (e->t == hi[i][j]) {
 						py = 1;
+						le = osa[hi[i][j]];
 					} else if (e->t == vi[i][j]) {
 						px = 1;
+						le = osa[vi[i][j]];
 					} else if (e->t == hi[i][j - 1]) {
 						py = -1;
+						le = ose[hi[i][j - 1]];
 					}
-					//c.line(i * (w + 1) * bls + bls * px, j * (w + 1) * bls + bls * py, i * (w + 1) * bls, j * (w + 1) * bls, 2);
+					c.line(i * (w + 1) * bls + bls * px * le, j * (w + 1) * bls + bls * py * le, i * (w + 1) * bls, j * (w + 1) * bls, 2);
 				}
 			}
 		}
@@ -338,6 +393,8 @@ void printPPM(int n, int w) {
 
 int main(int argc, char* args[]) {
 	int n(30);
+	memset(vis, 0, sizeof(vis));
+	tvis = 0;
 	for (int i = 1; i < argc; ++ i) {
 		if (!strcmp(args[i], "-n") && i + 1 < argc) {
 			n = atoi(args[++ i]);
