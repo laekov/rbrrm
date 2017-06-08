@@ -1,8 +1,9 @@
 #include <bits/stdc++.h>
+#include <canvas.h>
 
 using namespace std;
 
-const int maxa = 103;
+const int maxa = 203;
 const int maxn = maxa * maxa * 13;
 const int maxe = maxn * 10;
 const int inf = 0x3f3f3f3f;
@@ -123,11 +124,12 @@ bool check(int w, int n) {
 		}
 	}
 	int c(0);
+	fprintf(stderr, "Checking w = %d, expected = %d", w, (n - 1) * (m - 1));
 	while (dinicBFS()) {
 		c += dinicDFS(st, inf);
 	}
 	int res(c == (n - 1) * (m - 1));
-	fprintf(stderr, "Checking w = %d, expected = %d, escaped = %d, status = %s\n", w, (n - 1) * (m - 1), c, res ? "Escaped" : "Died");
+	fprintf(stderr, ", escaped = %d, status = %s\n", c, res ? "Escaped" : "Died");
 	if (0) {
 		for (int i = 0; i < n; ++ i) {
 			for (int j = 0; j < m; ++ j) {
@@ -167,6 +169,173 @@ int binarySearch(int n) {
 	return l;
 }
 
+const int maxb = 53;
+int di[maxb][maxb], ga[maxb][maxb], gb[maxb][maxb], dv[maxb][maxb], dh[maxb][maxb];
+
+inline void addDoubleEdge(int u, int v, int c, int w = 0) {
+	addEdge(u + 1, v, c, w);
+	addEdge(v + 1, u, c, w);
+}
+
+void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int rv) {
+	memset(dv, 0, sizeof(dv));
+	memset(dh, 0, sizeof(dh));
+	int tno(tn);
+	int sto(st), teo(te);
+	Edge* ebufo(ebuf);
+	head[st = ++ tn] = 0;
+	head[te = ++ tn] = 0;
+	for (int i = 0; i < w; ++ i) {
+		for (int j = 0; j < w; ++ j) {
+			head[di[i][j] = ++ tn] = 0, head[++ tn] = 0;
+			addEdge(di[i][j], di[i][j] + 1, 1);
+		}
+	}
+	for (int i = 0; i < w; ++ i) {
+		for (int j = 0; j + 1 < w; ++ j) {
+			head[ga[i][j] = ++ tn] = 0, head[++ tn] = 0;
+			et[ga[i][j]] = addEdge(ga[i][j], ga[i][j] + 1, 1);
+			addDoubleEdge(di[i][j], ga[i][j], 1);
+			addDoubleEdge(di[i][j + 1], ga[i][j], 1);
+		}
+	}
+	for (int i = 0; i + 1 < w; ++ i) {
+		for (int j = 0; j < w; ++ j) {
+			head[gb[i][j] = ++ tn] = 0, head[++ tn] = 0;
+			et[gb[i][j]] = addEdge(gb[i][j], gb[i][j] + 1, 1);
+			addDoubleEdge(gb[i][j], di[i + 1][j], 1);
+			addDoubleEdge(gb[i][j], di[i][j], 1);
+		}
+	}
+	static const int bxs[2][4] = { { 0, 1, 1, 0 }, { 0, 1, 0, 1 } };
+	static const int bys[2][4] = { { 0, 1, 0, 1 }, { 1, 0, 0, 1 } };
+	static const int mxs[2][4] = { { 0, 0, -1, 1 }, { 0, 0, 1, -1 } };
+	static const int mys[2][4] = { { 1, -1, 0, 0 }, { -1, 1, 0, 0 } };
+	for (int i = 0; i < 4; ++ i) {
+		int x(bxs[rv][i] * (w - 1)), y(bys[rv][i] * (w - 1));
+		for (int j = 0; j < dz[i] || j < dz[i + 4]; ++ j) {
+			if (dz[i]) {
+				addEdge(st, di[x][y], 1);
+			} else if (dz[i + 4]) {
+				addEdge(di[x][y] + 1, te, 1);
+			}
+			if (i == 0) {
+				dv[x][y] = 1;
+			} else if (i == 1) {
+				dv[x + 1][y] = 1;
+			} else if (i == 2) {
+				dh[x][y] = 1;
+			} else if (i == 3) {
+				dh[x][y + 1] = 1;
+			}
+			x += mxs[rv][i];
+			y += mys[rv][i];
+		}
+	}
+	while (dinicBFS()) {
+		dinicDFS(st, inf);
+	}
+	for (int i = 0; i < w; ++ i) {
+		for (int j = 0; j + 1 < w; ++ j) {
+			if (et[ga[i][j]]->rv->c) {
+				dh[i][j + 1] = 1;
+			}
+		}
+	}
+	for (int i = 0; i + 1 < w; ++ i) {
+		for (int j = 0; j < w; ++ j) {
+			if (et[gb[i][j]]->rv->c) {
+				dv[i + 1][j] = 1;
+			}
+		}
+	}
+	for (int i = 0; i < w; ++ i) {
+		for (int j = 0; j <= w; ++ j) {
+			if (dh[i][j]) {
+				c.line(bx + (i + 1) * bls, by + j * bls, bx + (i + 1) * bls, by + (j + 1) * bls, 2);
+			}
+		}
+	}
+	for (int i = 0; i <= w; ++ i) {
+		for (int j = 0; j < w; ++ j) {
+			if (dv[i][j]) {
+				c.line(bx + i * bls, by + (j + 1) * bls, bx + (i + 1) * bls, by + (j + 1) * bls, 2);
+			}
+		}
+	}
+	tn = tno, ebuf = ebufo;
+	st = sto, te = teo;
+}
+
+void printPPM(int n, int w) {
+	ofstream fout("out.ppm");
+	int bls(max(1366, n * (w + 1) * 2) / (n * (w + 1))), m(n);
+	int rr = max(bls / 5, 1);
+	Canvas c(bls * n * (w + 1) + 3, bls * n * (w + 1) + 3);
+	c.lineWid = min(c.lineWid, rr / 2);
+	for (int i = 0; i <= n * (w + 1); ++ i) {
+		c.circ(i * bls, 0, rr, 3);
+		c.circ(0, i * bls, rr, 3);
+		c.circ(i * bls, m * (w + 1) * bls, rr, 3);
+		c.circ(n * (w + 1) * bls, i * bls, rr, 3);
+	}
+	for (int i = 0; i <= n; ++ i) {
+		for (int j = 0; j <= m; ++ j) {
+			c.circ(i * (w + 1) * bls, j * (w + 1) * bls, rr, 4);
+		}
+	}
+	for (int i = 0; i < n; ++ i) {
+		for (int j = 0; j < m; ++ j) {
+			int dz[8];
+			for (Edge* e = head[ni[i][j]]; e; e = e->ne) {
+				if (e->t == hi[i][j] + 1) {
+					dz[0] = e->c;
+				} else if (e->t == hi[i + 1][j] + 1) {
+					dz[1] = e->c;
+				} else if (e->t == vi[i][j] + 1) {
+					dz[2] = e->c;
+				} else if (e->t == vi[i][j + 1] + 1) {
+					dz[3] = e->c;
+				}
+			}
+			for (Edge* e = head[ni[i][j] + 1]; e; e = e->ne) {
+				if (e->t == hi[i][j]) {
+					dz[4] = e->rv->c;
+				} else if (e->t == hi[i + 1][j]) {
+					dz[5] = e->rv->c;
+				} else if (e->t == vi[i][j]) {
+					dz[6] = e->rv->c;
+				} else if (e->t == vi[i][j + 1]) {
+					dz[7] = e->rv->c;
+				}
+			}
+			printGrid(c, w, i * (w + 1) * bls, j * (w + 1) * bls, bls, rr, dz, (i ^ j)& 1);
+		}
+		fprintf(stderr, "Processing grid line %d\n", i);
+	}
+	for (int i = 1; i < n; ++ i) {
+		for (int j = 1; j < m; ++ j) {
+			for (Edge* e = head[si[i][j]]; e; e = e->ne) {
+				if (e->t != st && e->rv->c) {
+					int px(0), py(0);
+					if (e->t == vi[i - 1][j]) {
+						px = -1;
+					} else if (e->t == hi[i][j]) {
+						py = 1;
+					} else if (e->t == vi[i][j]) {
+						px = 1;
+					} else if (e->t == hi[i][j - 1]) {
+						py = -1;
+					}
+					//c.line(i * (w + 1) * bls + bls * px, j * (w + 1) * bls + bls * py, i * (w + 1) * bls, j * (w + 1) * bls, 2);
+				}
+			}
+		}
+	}
+	c.write(fout);
+	fout.close();
+}
+
 int main(int argc, char* args[]) {
 	int n(30);
 	for (int i = 1; i < argc; ++ i) {
@@ -174,6 +343,9 @@ int main(int argc, char* args[]) {
 			n = atoi(args[++ i]);
 		}
 	}
-	printf("n = %d, gridlines = %d\n", n, binarySearch(n));
+	int ans;
+	printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
+	check(ans, n);
+	printPPM(n, ans);
 }
 
