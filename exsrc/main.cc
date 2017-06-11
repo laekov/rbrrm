@@ -3,9 +3,15 @@
 
 using namespace std;
 
+typedef vector<pair<int, int> > LineArr;
+
+#define POSMK(_a_,_b_) (((_a_)<<16)|(_b_))
+#define POSX(_a_) ((_a_)>>16)
+#define POSY(_a_) ((_a_)&0xffff)
+
 const int maxa = 203;
 const int maxn = maxa * maxa * 13;
-const int maxe = maxn * 10;
+const int maxe = maxn * 30;
 const int inf = 0x3f3f3f3f;
 
 struct Edge {
@@ -70,8 +76,7 @@ int dinicDFS(int u, int c) {
 	return s;
 }
 
-bool check(int w, int n) {
-	int m(n);
+bool check(int w, int n, int m) {
 	ebuf = epool;
 	memset(head, 0, sizeof(head));
 	tn = 0;
@@ -164,11 +169,11 @@ bool check(int w, int n) {
 	return res;
 }
 
-int binarySearch(int n) {
-	int l(n / 16), r((n + 1));
+int binarySearch(int n, int m) {
+	int l(n / 16), r((m + 4) / 2);
 	while (l < r) {
 		int mid((l + r)>> 1);
-		if (check(mid, n)) {
+		if (check(mid, n, m)) {
 			r = mid;
 		} else {
 			l = mid + 1;
@@ -185,7 +190,11 @@ inline void addDoubleEdge(int u, int v, int c, int w = 0) {
 	addEdge(v + 1, u, c, w);
 }
 
-void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* dp, int rv) {
+void detailBlock(LineArr& c, int w, int bx, int by, int* dz, int* dp, int rv) {
+	for (int i = 0; i < 4; ++ i) {
+		int t(min(dz[i], dz[i + 4]));
+		dz[i] -= t, dz[i + 4] -= t;
+	}
 	memset(dv, 0, sizeof(dv));
 	memset(dh, 0, sizeof(dh));
 	int tno(tn);
@@ -265,10 +274,15 @@ void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* 
 			}
 		}
 	}
+	int totc(0);
 	while (dinicBFS()) {
-		dinicDFS(st, inf);
+		totc += dinicDFS(st, inf);
 	}
 	dinicBFS(1);
+	if (totc < dz[0] + dz[1] + dz[2] + dz[3]) {
+		fprintf(stderr, "Block error at (%d, %d)\n", bx / (w + 1), by / (w + 1));
+		return;
+	}
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j + 1 < w; ++ j) {
 			if (vis[ga[i][j]] == tvis && et[ga[i][j]]->rv->c) {
@@ -286,14 +300,14 @@ void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* 
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j <= w; ++ j) {
 			if (dh[i][j]) {
-				c.line(bx + (i + 1) * bls, by + j * bls, bx + (i + 1) * bls, by + (j + 1) * bls, 2);
+				c.push_back(pair<int, int>(POSMK(bx + i + 1, by + j), POSMK(bx + i + 1, by + j + 1)));
 			}
 		}
 	}
 	for (int i = 0; i <= w; ++ i) {
 		for (int j = 0; j < w; ++ j) {
 			if (dv[i][j]) {
-				c.line(bx + i * bls, by + (j + 1) * bls, bx + (i + 1) * bls, by + (j + 1) * bls, 2);
+				c.push_back(pair<int, int>(POSMK(bx + i, by + j + 1), POSMK(bx + i + 1, by + j + 1)));
 			}
 		}
 	}
@@ -301,23 +315,7 @@ void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* 
 	st = sto, te = teo;
 }
 
-void printPPM(int n, int w) {
-	ofstream fout("out.ppm");
-	int bls(max(1366, n * (w + 1) * 2) / (n * (w + 1))), m(n);
-	int rr = max(bls / 5, 1);
-	Canvas c(bls * n * (w + 1) + 3, bls * n * (w + 1) + 3);
-	c.lineWid = min(c.lineWid, rr / 2);
-	for (int i = 0; i <= n * (w + 1); ++ i) {
-		c.circ(i * bls, 0, rr, 3);
-		c.circ(0, i * bls, rr, 3);
-		c.circ(i * bls, m * (w + 1) * bls, rr, 3);
-		c.circ(n * (w + 1) * bls, i * bls, rr, 3);
-	}
-	for (int i = 0; i <= n; ++ i) {
-		for (int j = 0; j <= m; ++ j) {
-			c.circ(i * (w + 1) * bls, j * (w + 1) * bls, rr, 4);
-		}
-	}
+void detailAllBlocks(LineArr& res, int n, int m, int w) {
 	memset(osa, 0, sizeof(osa));
 	memset(ose, 0, sizeof(ose));
 	for (int i = 1; i < n; ++ i) {
@@ -366,9 +364,11 @@ void printPPM(int n, int w) {
 			dp[1] = hi[i + 1][j];
 			dp[2] = vi[i][j];
 			dp[3] = vi[i][j + 1];
-			printGrid(c, w, i * (w + 1) * bls, j * (w + 1) * bls, bls, rr, dz, dp, (i ^ j)& 1);
+			detailBlock(res, w, i * (w + 1), j * (w + 1), dz, dp, (i ^ j)& 1);
 		}
-		fprintf(stderr, "Processing grid line %d\n", i);
+		if ((i & 13) == 0) {
+			fprintf(stderr, "Processing line %d / %d\n", i, n);
+		}
 	}
 	for (int i = 1; i < n; ++ i) {
 		for (int j = 1; j < m; ++ j) {
@@ -388,13 +388,37 @@ void printPPM(int n, int w) {
 						py = -1;
 						le = ose[hi[i][j - 1]];
 					}
-					c.line(i * (w + 1) * bls + bls * px * le, j * (w + 1) * bls + bls * py * le, i * (w + 1) * bls, j * (w + 1) * bls, 2);
+					res.push_back(pair<int, int>(POSMK(i * (w + 1) + px * le, j * (w + 1) + py * le), POSMK(i * (w + 1), j * (w + 1))));
 				}
 			}
 		}
 	}
+}
+
+void printPPM(int n, int m, int w, const LineArr& res) {
+	fprintf(stderr, "Writing picture\n");
+	ofstream fout("out.ppm");
+	int bls(max(1366, n * (w + 1) * 2) / (n * (w + 1)));
+	int rr = max(bls / 5, 1);
+	Canvas c(bls * n * (w + 1) + 3, bls * m * (w + 1) + 3);
+	c.lineWid = min(c.lineWid, rr / 2);
+	for (int i = 0; i <= n * (w + 1); ++ i) {
+		c.circ(i * bls, 0, rr, 3);
+		c.circ(0, i * bls, rr, 3);
+		c.circ(i * bls, m * (w + 1) * bls, rr, 3);
+		c.circ(n * (w + 1) * bls, i * bls, rr, 3);
+	}
+	for (int i = 0; i <= n; ++ i) {
+		for (int j = 0; j <= m; ++ j) {
+			c.circ(i * (w + 1) * bls, j * (w + 1) * bls, rr, 4);
+		}
+	}
+	for (LineArr::const_iterator it = res.begin(); it != res.end(); ++ it) {
+		c.line(POSX(it->first) * bls, POSY(it->first) * bls, POSX(it->second) * bls, POSY(it->second) * bls, 2);
+	}
 	c.write(fout);
 	fout.close();
+	fprintf(stderr, "Picture written to out.ppm\n");
 }
 
 void testGrid(int n, int w) {
@@ -420,40 +444,73 @@ void testGrid(int n, int w) {
 	memset(ose, 0, sizeof(ose));
 	int dz[8], dp[4];
 	memset(dz, 0, sizeof(dz));
-	dz[0] = 8;
-	dz[2] = 5;
-	dz[7] = 8;
-	dz[5] = 5;
+	dz[0] = 13;
+	dz[6] = 3;
+	dz[3] = 3;
+	dz[5] = 15;
 	memset(dp, 0, sizeof(dp));
-	printGrid(c, w, 0, 0, bls, rr, dz, dp, (0 ^ 0)& 1);
+	//printGrid(c, w, 0, 0, dz, dp, (0 ^ 1)& 1);
 	c.write(fout);
 	fout.close();
 }
 
+void printCoor(int n, int m, int w, const LineArr& ans) {
+	fprintf(stderr, "Writing coordinates\n");
+	FILE* fout(fopen("out.txt", "w"));
+	fprintf(fout, "%d %d %d\n", n, m, w);
+	for (LineArr::const_iterator it = ans.begin(); it != ans.end(); ++ it) {
+		fprintf(fout, "%d %d\n", it->first, it->second);
+	}
+	fclose(fout);
+	fprintf(stderr, "Written coordinates to out.txt\n");
+}
+
 int main(int argc, char* args[]) {
-	int n(30);
-	int printPic(1);
+	int n(30), m(-1);
 	int testGridW(0);
+	int printPic(0);
+	int outppm(0);
+	int outcoor(0);
 	memset(vis, 0, sizeof(vis));
 	tvis = 0;
 	for (int i = 1; i < argc; ++ i) {
 		if (!strcmp(args[i], "-n") && i + 1 < argc) {
 			n = atoi(args[++ i]);
+		} else if (!strcmp(args[i], "-m") && i + 1 < argc) {
+			m = atoi(args[++ i]);
 		} else if (!strcmp(args[i], "--no-pic")) {
 			printPic = 0;
 		} else if (!strcmp(args[i], "--test-grid") && i + 1 < argc) {
 			testGridW = atoi(args[++ i]);
+		} else if (!strcmp(args[i], "--out-coor")) {
+			outcoor = 1;
+			printPic = 1;
+		} else if (!strcmp(args[i], "--out-ppm")) {
+			outppm = 1;
+			printPic = 1;
 		}
+	}
+	if (m == -1) {
+		m = n;
+	} else if (n > m) {
+		swap(n, m);
 	}
 	if (testGridW) {
 		n = 1;
 		testGrid(n, testGridW);
 	} else {
 		int ans;
-		printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
+		printf("n = %d, m = %d, gridlines = %d\n", n, m, (ans = binarySearch(n, m)));
+		LineArr res;
 		if (printPic) {
-			check(ans, n);
-			printPPM(n, ans);
+			check(ans, n, m);
+			detailAllBlocks(res, n, m, ans);
+		}
+		if (outppm) {
+			printPPM(n, m, ans, res);
+		}
+		if (outcoor) {
+			printCoor(n, m, ans, res);
 		}
 	}
 }
