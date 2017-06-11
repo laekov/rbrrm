@@ -12,8 +12,8 @@ struct Edge {
 	int t, c, w;
 	Edge *ne, *rv;
 };
-Edge epool[maxe], *ebuf, *head[maxn], *et[maxn];
-int st, te, tn, n, d[maxn];
+Edge epool[maxe], *ebuf, *head[maxn], *et[maxn], *fe[maxn];
+int st, te, tn, n, d[maxn], fr[maxn];
 int ni[maxa][maxa], hi[maxa][maxa], vi[maxa][maxa], pi[maxa][maxa];
 
 Edge* newEdge(int u, int v, int c, int w) {
@@ -65,7 +65,39 @@ int dinicDFS(int u, int c) {
 	return s;
 }
 
-bool check(int w, int nx) {
+#define QCHECK(_x_) { \
+	if ((_x_) == maxn) { \
+		(_x_) = 0; \
+	} \
+}
+
+bool SPFA() {
+	static int inq[maxn], q[maxn];
+	int hd(0), tl(1);
+	memset(inq, 0, sizeof(inq));
+	memset(d, 0x3f, sizeof(d));
+	d[q[hd] = st] = 0;
+	inq[st] = 1;
+	while (hd < tl) {
+		int u(q[hd ++]);
+		inq[u] = 0;
+		QCHECK(hd);
+		for (Edge* e = head[u]; e; e = e->ne) {
+			if (e->c && d[u] + e->w < d[e->t]) {
+				d[e->t] = d[u] + e->w;
+				fr[e->t] = u;
+				fe[e->t] = e;
+				if (!inq[e->t]) {
+					inq[q[tl ++] = e->t] = 1;
+					QCHECK(tl);
+				}
+			}
+		}
+	}
+	return d[te] < inf;
+}
+
+void buildGraph(int w, int nx) {
 	++ w;
 	int n(nx * w), m(n);
 	ebuf = epool;
@@ -87,7 +119,7 @@ bool check(int w, int nx) {
 	for (int i = 0; i <= n; ++ i) {
 		for (int j = 0; j < m; ++ j) {
 			hi[i][j] = ++ tn, ++ tn;
-			et[hi[i][j]] = addEdge(hi[i][j], hi[i][j] + 1, 1);
+			et[hi[i][j]] = addEdge(hi[i][j], hi[i][j] + 1, 1, 1);
 			addEdge(ni[i][j] + 1, hi[i][j], inf);
 			addEdge(hi[i][j] + 1, ni[i][j], inf);
 			addEdge(ni[i][j + 1] + 1, hi[i][j], inf);
@@ -97,19 +129,40 @@ bool check(int w, int nx) {
 	for (int i = 0; i < n; ++ i) {
 		for (int j = 0; j <= m; ++ j) {
 			vi[i][j] = ++ tn, ++ tn;
-			et[vi[i][j]] = addEdge(vi[i][j], vi[i][j] + 1, 1);
+			et[vi[i][j]] = addEdge(vi[i][j], vi[i][j] + 1, 1, 1);
 			addEdge(ni[i][j] + 1, vi[i][j], inf);
 			addEdge(vi[i][j] + 1, ni[i][j], inf);
 			addEdge(ni[i + 1][j] + 1, vi[i][j], inf);
 			addEdge(vi[i][j] + 1, ni[i + 1][j], inf);
 		}
 	}
+}
+
+int costFlow(int w, int nx) {
+	buildGraph(w, nx);
+	int s(0), c(0);
+	while (SPFA()) {
+		int cc(inf);
+		for (int u = te; u != st; u = fr[u]) {
+			cc = min(cc, fe[u]->c);
+		}
+		for (int u = te; u != st; u = fr[u]) {
+			fe[u]->c -= cc, fe[u]->rv->c += cc;
+			s += fe[u]->w * cc;
+		}
+		c += cc;
+	}
+	return s;
+}
+
+bool check(int w, int nx) {
+	buildGraph(w, nx);
 	int c(0);
 	while (dinicBFS()) {
 		c += dinicDFS(st, inf);
 	}
 	int res(c == (nx + 1) * (nx + 1));
-	fprintf(stderr, "Checking w = %d, expected = %d, escaped = %d, status = %s\n", w - 1, (nx + 1) * (nx + 1), c, res ? "Escaped" : "Died");
+	fprintf(stderr, "Checking w = %d, expected = %d, escaped = %d, status = %s\n", w, (nx + 1) * (nx + 1), c, res ? "Escaped" : "Died");
 	return res;
 }
 
@@ -117,28 +170,28 @@ void print(int n, int m, int w) {
 	ofstream fout("out.ppm");
 	int bls = 1366 / max(n, m);
 	int rr = max(bls / 7, 1);
-	Canvas c(bls * (n - 1) + rr * 2, bls * (m - 1) + rr * 2);
+	Canvas c(bls * n + rr * 2, bls * n + rr * 2);
 	c.lineWid = min(c.lineWid, rr / 2);
-	for (int i = 0; i < n; ++ i) {
-		for (int j = 0; j < m; ++ j) {
+	for (int i = 0; i <= n; ++ i) {
+		for (int j = 0; j <= m; ++ j) {
 			int co(1);
-			if (i == 0 || i == n - 1 || j == 0 || j == m - 1) {
-				co = 3;
-			} else if (i % w == 0 && j % w == 0) {
+			if (i % w == 0 && j % w == 0) {
 				co = 4;
+			} else if (i == 0 || i == n || j == 0 || j == m) {
+				co = 3;
 			}
 			c.circ(i * bls + rr, j * bls + rr, rr, co);
 		}
 	}
-	for (int i = 0; i < n; ++ i) {
-		for (int j = 0; j + 1 < m; ++ j) {
+	for (int i = 0; i <= n; ++ i) {
+		for (int j = 0; j + 1 <= m; ++ j) {
 			if (et[hi[i][j]]->rv->c) {
 				c.line(i * bls + rr, j * bls + rr * 2, i * bls + rr, j * bls + bls, 2);
 			}
 		}
 	}
-	for (int i = 0; i + 1 < n; ++ i) {
-		for (int j = 0; j < m; ++ j) {
+	for (int i = 0; i + 1 <= n; ++ i) {
+		for (int j = 0; j <= m; ++ j) {
 			if (et[vi[i][j]]->rv->c) {
 				c.line(i * bls + rr * 2, j * bls + rr, i * bls + bls, j * bls + rr, 2);
 			}
@@ -169,6 +222,10 @@ int main(int argc, char* args[]) {
 			n = atoi(args[++ i]);
 		}
 	}
-	printf("n = %d, gridlines = %d\n", n, binarySearch(n));
+	int ans;
+	printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
+	int totlen(costFlow(ans, n));
+	printf("total length = %d\n", totlen);
+	print(n * (ans + 1), n * (ans + 1), ans + 1);
 }
 
