@@ -468,7 +468,7 @@ void printCoor(int n, int m, int w, const LineArr& ans) {
 int main(int argc, char* args[]) {
 	int n(30), m(-1);
 	int testGridW(0);
-	int printPic(0);
+	int getdetail(0);
 	int outppm(0);
 	int outcoor(0);
 	memset(vis, 0, sizeof(vis));
@@ -478,16 +478,16 @@ int main(int argc, char* args[]) {
 			n = atoi(args[++ i]);
 		} else if (!strcmp(args[i], "-m") && i + 1 < argc) {
 			m = atoi(args[++ i]);
-		} else if (!strcmp(args[i], "--no-pic")) {
-			printPic = 0;
 		} else if (!strcmp(args[i], "--test-grid") && i + 1 < argc) {
 			testGridW = atoi(args[++ i]);
 		} else if (!strcmp(args[i], "--out-coor")) {
 			outcoor = 1;
-			printPic = 1;
+			getdetail = 1;
 		} else if (!strcmp(args[i], "--out-ppm")) {
 			outppm = 1;
-			printPic = 1;
+			getdetail = 1;
+		} else if (!strcmp(args[i], "-detail")) {
+			getdetail = 1;
 		}
 	}
 	if (m == -1) {
@@ -499,12 +499,14 @@ int main(int argc, char* args[]) {
 		n = 1;
 		testGrid(n, testGridW);
 	} else {
-		int ans;
+		int ans, totlen;
 		printf("n = %d, m = %d, gridlines = %d\n", n, m, (ans = binarySearch(n, m)));
 		LineArr res;
-		if (printPic) {
+		if (getdetail) {
 			check(ans, n, m);
 			detailAllBlocks(res, n, m, ans);
+			totlen = res.size();
+			printf("total length = %d\n", totlen);
 		}
 		if (outppm) {
 			printPPM(n, m, ans, res);
