@@ -3,7 +3,7 @@
 
 using namespace std;
 
-const int maxa = 303;
+const int maxa = 503;
 const int maxn = maxa * maxa * 13;
 const int maxe = maxn * 10;
 const int inf = 0x3f3f3f3f;

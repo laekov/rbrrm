@@ -9,7 +9,7 @@ const int maxe = maxn * 10;
 const int inf = 0x3f3f3f3f;
 
 struct Edge {
-	int t, c, w;
+	int t, c, w, d;
 	Edge *ne, *rv;
 };
 Edge epool[maxe], *ebuf, *head[maxn], *et[maxn];
@@ -28,22 +28,24 @@ Edge* newEdge(int u, int v, int c, int w) {
 
 Edge* addEdge(int u, int v, int c, int w = 0) {
 	Edge *a(newEdge(u, v, c, w)), *b(newEdge(v, u, 0, -w));
+	a->d = 1, b->d = 0;
 	a->rv = b, b->rv = a;
 	return a;
 }
 
-bool dinicBFS() {
-	static int q[maxn];
+bool dinicBFS(int reqAll = 0) {
+	static int q[maxn], fr[maxn];
 	int hd(0), tl(1);
 	++ tvis;
 	d[q[hd] = st] = 1;
 	vis[st] = tvis;
-	while (hd < tl && vis[te] < tvis) {
+	while (hd < tl && (vis[te] < tvis || reqAll)) {
 		int u(q[hd ++]);
 		for (Edge* e = head[u]; e; e = e->ne) {
-			if (e->c && vis[e->t] < tvis) {
+			if (((bool)e->c != (bool)reqAll) && (!reqAll || e->d) && vis[e->t] < tvis) {
 				d[e->t] = d[u] + 1;
 				vis[q[tl ++] = e->t] = tvis;
+				fr[e->t] = u;
 			}
 		}
 	}
@@ -120,10 +122,13 @@ bool check(int w, int n) {
 		for (int j = 1; j < m; ++ j) {
 			si[i][j] = ++ tn;
 			et[si[i][j]] = addEdge(st, tn, 1);
-			addEdge(si[i][j], vi[i - 1][j], 1);
-			addEdge(si[i][j], vi[i][j], 1);
-			addEdge(si[i][j], hi[i][j - 1], 1);
-			addEdge(si[i][j], hi[i][j], 1);
+			if ((i ^ j)& 1) {
+				addEdge(si[i][j], hi[i][j - 1], 1);
+				addEdge(si[i][j], hi[i][j], 1);
+			} else {
+				addEdge(si[i][j], vi[i - 1][j], 1);
+				addEdge(si[i][j], vi[i][j], 1);
+			}
 		}
 	}
 	int c(0);
@@ -263,16 +268,17 @@ void printGrid(Canvas& c, int w, int bx, int by, int bls, int rr, int* dz, int* 
 	while (dinicBFS()) {
 		dinicDFS(st, inf);
 	}
+	dinicBFS(1);
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j + 1 < w; ++ j) {
-			if (et[ga[i][j]]->rv->c) {
+			if (vis[ga[i][j]] == tvis && et[ga[i][j]]->rv->c) {
 				dh[i][j + 1] = 1;
 			}
 		}
 	}
 	for (int i = 0; i + 1 < w; ++ i) {
 		for (int j = 0; j < w; ++ j) {
-			if (et[gb[i][j]]->rv->c) {
+			if (vis[gb[i][j]] == tvis && et[gb[i][j]]->rv->c) {
 				dv[i + 1][j] = 1;
 			}
 		}
@@ -391,18 +397,64 @@ void printPPM(int n, int w) {
 	fout.close();
 }
 
+void testGrid(int n, int w) {
+	ebuf = epool;
+	int m(n);
+	ofstream fout("gridout.ppm");
+	int bls(max(1366, n * (w + 1) * 2) / (n * (w + 1)));
+	int rr = max(bls / 5, 1);
+	Canvas c(bls * n * (w + 1) + 3, bls * n * (w + 1) + 3);
+	c.lineWid = min(c.lineWid, rr / 2);
+	for (int i = 0; i <= n * (w + 1); ++ i) {
+		c.circ(i * bls, 0, rr, 3);
+		c.circ(0, i * bls, rr, 3);
+		c.circ(i * bls, m * (w + 1) * bls, rr, 3);
+		c.circ(n * (w + 1) * bls, i * bls, rr, 3);
+	}
+	for (int i = 0; i <= n; ++ i) {
+		for (int j = 0; j <= m; ++ j) {
+			c.circ(i * (w + 1) * bls, j * (w + 1) * bls, rr, 4);
+		}
+	}
+	memset(osa, 0, sizeof(osa));
+	memset(ose, 0, sizeof(ose));
+	int dz[8], dp[4];
+	memset(dz, 0, sizeof(dz));
+	dz[0] = 8;
+	dz[2] = 5;
+	dz[7] = 8;
+	dz[5] = 5;
+	memset(dp, 0, sizeof(dp));
+	printGrid(c, w, 0, 0, bls, rr, dz, dp, (0 ^ 0)& 1);
+	c.write(fout);
+	fout.close();
+}
+
 int main(int argc, char* args[]) {
 	int n(30);
+	int printPic(1);
+	int testGridW(0);
 	memset(vis, 0, sizeof(vis));
 	tvis = 0;
 	for (int i = 1; i < argc; ++ i) {
 		if (!strcmp(args[i], "-n") && i + 1 < argc) {
 			n = atoi(args[++ i]);
+		} else if (!strcmp(args[i], "--no-pic")) {
+			printPic = 0;
+		} else if (!strcmp(args[i], "--test-grid") && i + 1 < argc) {
+			testGridW = atoi(args[++ i]);
 		}
 	}
-	int ans;
-	printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
-	check(ans, n);
-	printPPM(n, ans);
+	if (testGridW) {
+		n = 1;
+		testGrid(n, testGridW);
+	} else {
+		int ans;
+		printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
+		if (printPic) {
+			check(ans, n);
+			printPPM(n, ans);
+		}
+	}
 }
 
