@@ -1,4 +1,4 @@
-#include <canvas.h>
+#include <canvas.hh>
 #include <algorithm>
 using std::swap;
 void Canvas::setPixel(int x, int y, int c) {

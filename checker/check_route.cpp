@@ -1,12 +1,10 @@
-#include <iostream>
-#include <cmath>
-#include <vector>
+#include <bits/stdc++.h>
 
 using namespace std;
 
 int main()
 {
-	freopen("out.txt","r",stdin);
+	//freopen("out.txt","r",stdin);
 	int m, n, w;
 	cin >> m >> n >> w;
 	vector <vector<int> > G;

@@ -1,20 +1,16 @@
 cc = g++ -g -Isrc/include
-default : mkdir bin/main
-routers = obj/costflow.o obj/dinic.o obj/flow.o obj/router.o obj/routerlist.o
-bin/main : src/main.cpp obj/canvas.o $(routers)
-	$(cc) src/main.cpp obj/canvas.o $(routers) -o bin/main
-obj/costflow.o : src/include/costflow.h src/costflow.cpp
-	$(cc) -c src/costflow.cpp -o obj/costflow.o
-obj/routerlist.o : src/routerlist.cpp
-	$(cc) -c src/routerlist.cpp -o obj/routerlist.o
-obj/dinic.o : src/include/dinic.h src/dinic.cpp
-	$(cc) -c src/dinic.cpp -o obj/dinic.o
-obj/flow.o : src/include/flow.h src/flow.cpp
-	$(cc) -c src/flow.cpp -o obj/flow.o
-obj/router.o : src/include/router.h src/router.cpp
-	$(cc) -c src/router.cpp -o obj/router.o
-obj/canvas.o : src/canvas.cpp src/include/canvas.h
-	$(cc) -c src/canvas.cpp -o obj/canvas.o
+headers = $(wildcard src/include/*.hh)
+objects = $(headers:src/include/%.hh=obj/%.o)
+sources = $(headers:src/include/%.hh=src/%.cc)
+
+default : mkdir $(objects) bin/main
+
+bin/main : src/main.cc $(objects)
+	$(cc) src/main.cc $(objects) -o $@
+
+obj/%.o : src/%.cc src/include/%.hh 
+	$(cc) -c $< -o $@
+
 mkdir :
 	@if [ ! -d obj ]; then mkdir obj; fi
 	@if [ ! -d bin ]; then mkdir bin; fi

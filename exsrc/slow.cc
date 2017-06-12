@@ -226,6 +226,6 @@ int main(int argc, char* args[]) {
 	printf("n = %d, gridlines = %d\n", n, (ans = binarySearch(n)));
 	int totlen(costFlow(ans, n));
 	printf("total length = %d\n", totlen);
-	print(n * (ans + 1), n * (ans + 1), ans + 1);
+//	print(n * (ans + 1), n * (ans + 1), ans + 1);
 }
 
