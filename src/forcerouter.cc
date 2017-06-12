@@ -45,7 +45,9 @@ FlowSolver* ForceRouter::buildGraph(int w) {
 bool ForceRouter::check(int w) {
 	FlowSolver* fs(this->buildGraph(this->w));
 	int expectedFlow((n + 1) * (m + 1));
-	return fs->maxFlow(this->st, this->te) == expectedFlow;
+	bool res(fs->maxFlow(this->st, this->te) == expectedFlow);
+	delete fs;
+	return res;
 }
 
 int ForceRouter::getMinWidth() {

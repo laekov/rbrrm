@@ -21,6 +21,9 @@ class FlowSolver {
 		int *d, *fr, st, te, *inq;
 		int delooped, tn;
 		inline Edge* newEdge(int u, int v, int c, int w) {
+			if (u >= this->tn || v >= this->tn) {
+				throw -1;
+			}
 			if (ebuf - epool == epoolsize) {
 				this->pools.push_back(ebuf = epool = new Edge[FlowSolver::epoolsize]);
 			}
@@ -35,9 +38,9 @@ class FlowSolver {
 		bool BFS(int = 0);
 		int DFS(int, int);
 	public:
-		FlowSolver(int totNodes) {
+		FlowSolver(int totNodes): pools() {
 			this->tn = totNodes += 7;
-			this->ebuf = this->epool = new Edge[FlowSolver::epoolsize];
+			this->pools.push_back(this->ebuf = this->epool = new Edge[FlowSolver::epoolsize]);
 			this->head = new Edge*[totNodes];
 			memset(this->head, 0, totNodes * sizeof(Edge*));
 			this->fe = new Edge*[totNodes];

@@ -21,7 +21,7 @@ class RuleBasedRouter: public Router {
 		int getMinWidth();
 		LineArr getModel();
 		RuleBasedRouter(int n_, int m_ = -1): Router(n_, m_) {
-			this->tn = this->n * this->m * 7 + 3;
+			this->tn = (this->n + 1)*(this->m + 1)* 7 + 3;
 			this->ta = this->m + 3;
 			this->ni = SimpleMM::i2alloc(this->ta);
 			this->hi = SimpleMM::i2alloc(this->ta);

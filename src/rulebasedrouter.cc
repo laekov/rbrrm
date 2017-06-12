@@ -70,7 +70,8 @@ FlowSolver* RuleBasedRouter::buildGraph(int w) {
 
 bool RuleBasedRouter::check(int w) {
 	FlowSolver* fs(this->buildGraph(w));
-	return fs->maxFlow(this->st, this->te) == (n - 1) * (m - 1);
+	bool ret(fs->maxFlow(this->st, this->te) == (n - 1) * (m - 1));
+	delete [] fs;
 }
 
 int RuleBasedRouter::getMinWidth() {
@@ -96,7 +97,7 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 		int t(min(dz[i], dz[i + 4]));
 		dz[i] -= t, dz[i + 4] -= t;
 	}
-	FlowSolver fs((w + 2)*(w + 2)* 6 + 7);
+	FlowSolver fs((w + 2)*(w + 2)* 8 + 7);
 	int tn(0), st(++ tn), te(++ tn);
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j < w; ++ j) {
