@@ -9,6 +9,11 @@ using std::min;
 using std::max;
 
 void DetailGraphReporter::print(const char* fileName) {
+	if (max(n, m) * (w + 1) > 1400) {
+		fprintf(stderr, "Data scale not suitable to print brief picture. Not processing.\n");
+		return;
+	}
+	const char* outFileName(fileName ? fileName : "out.pnm");
 	fprintf(stderr, "Writing picture to %s\n", fileName ? fileName : "out.ppm");
 	ofstream fout(fileName ? fileName : "out.ppm");
 	int bls(max(1366, n * (w + 1) * 2) / (n * (w + 1)));

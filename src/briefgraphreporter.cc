@@ -9,11 +9,17 @@ using std::max;
 using std::ofstream;
 
 void BriefGraphReporter::print(const char* fileName) {
+	if (max(n, m) * (w + 1) < 400) {
+		fprintf(stderr, "Data scale not suitable to print brief picture. Not processing.\n");
+		return;
+	}
 	const char* outFileName(fileName ? fileName : "out.pnm");
 	fprintf(stderr, "Processing brief picture to %s\n", outFileName);
-	int grs(max((w + 1) * max(n, m) / 1366 + 1, 4));
-	int bn(n * (w + 1) / grs + 2);
-	int bm(m * (w + 1) / grs + 2);
+	int blc(min(1366, ((w + 1) * max(n, m))));
+	int grs(max((w + 1) * max(n, m) / blc + 1, 4));
+	fprintf(stderr, "blc = %d grs = %d\n", blc, grs);
+	int bn(n * (w + 1) / grs + 3);
+	int bm(m * (w + 1) / grs + 3);
 	this->g = SimpleMM::i2alloc(bn, bm);
 	for (int i = 0; i < bn; ++ i) {
 		for (int j = 0; j < bm; ++ j) {
@@ -32,15 +38,15 @@ void BriefGraphReporter::print(const char* fileName) {
 			}
 		}
 	}
-	int bls(max(1366 / max(n, m) + 1, 5));
+	int bls(1366 / blc);
 	int rr = max(max(bls / (w + 1), 5) / 5, 1);
-	int picx(grs * bn), picy(grs * bm);
+	int picx(bls * bn), picy(bls * bm);
 	Canvas c(picx, picy);
-	c.lineWid = min(c.lineWid, grs / 2);
+	c.lineWid = min(c.lineWid, bls / 2);
 	for (int i = 0; i < bn; ++ i) {
 		for (int j = 0; j < bm; ++ j) {
 			if (g[i][j]) {
-				c.rect(i * grs, j * grs, (i + 1)* grs, (j + 1)* grs, -(double)g[i][j] * 255 / gmax);
+				c.rect(i * bls, j * bls, (i + 1)* bls, (j + 1)* bls, -(double)g[i][j] * 255 / gmax);
 			}
 		}
 	}
