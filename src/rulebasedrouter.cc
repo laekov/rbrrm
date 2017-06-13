@@ -1,6 +1,7 @@
 #include <rulebasedrouter.hh>
 #include <flowsolver.hh>
 #include <algorithm>
+#include <cstdio>
 
 using std::max;
 using std::min;
@@ -79,12 +80,14 @@ int RuleBasedRouter::getMinWidth() {
 	int l(n / 16), r((m + 4) / 2);
 	while (l < r) {
 		int mid((l + r)>> 1);
+		fprintf(stderr, "\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10Trying to escape using w = %d (%d - %d)", mid, l, r);
 		if (check(mid)) {
 			r = mid;
 		} else {
 			l = mid + 1;
 		}
 	}
+	fputc(10, stderr);
 	return this->w = l;
 }
 
@@ -172,7 +175,11 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 			}
 		}
 	}
-	fs.minCost(st, te);
+	if (w < 10) {
+		fs.minCost(st, te);
+	} else {
+		fs.maxFlow(st, te);
+	}
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j + 1 < w; ++ j) {
 			if (fs.isEdgeUsed(et[ga[i][j]], ga[i][j])) {
@@ -245,7 +252,9 @@ LineArr RuleBasedRouter::getModel() {
 			dp[3] = vi[i][j + 1];
 			detailBlock(res, i * (w + 1), j * (w + 1), dz, dp, (i ^ j)& 1);
 		}
+		fprintf(stderr, "\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10Details of row %d / %d resolved", i + 1, n);
 	}
+	fputc(10, stderr);
 	for (int i = 1; i < n; ++ i) {
 		for (int j = 1; j < m; ++ j) {
 			for (FlowSolver::Edge* e = fs->head[si[i][j]]; e; e = e->ne) {

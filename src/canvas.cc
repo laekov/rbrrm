@@ -45,7 +45,11 @@ void Canvas::write(std::ostream& fout) {
 	for (int i = 0; i < this->n_; ++ i) {
 		for (int j = 0; j < this->m_; ++ j) {
 			for (int k = 0; k < 3; ++ k) {
-				fout << colors[this->g_[i][j]][k] << " ";
+				if (this->g_[i][j] >= 0) {
+					fout << colors[this->g_[i][j]][k] << " ";
+				} else {
+					fout << (int)(colors[2][k] * ((double)-this->g_[i][j] / 255)) << " ";
+				}
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 /* Text Reporter class
- * Output the answer in text format
+ * Output the answer as a detailed graph
+ * Large scaled data not supported
  */
 
 #ifndef DETAIL_GRAPH_REPORTER_HH
