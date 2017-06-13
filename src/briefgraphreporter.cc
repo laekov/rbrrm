@@ -12,9 +12,14 @@ void BriefGraphReporter::print(const char* fileName) {
 	const char* outFileName(fileName ? fileName : "out.pnm");
 	fprintf(stderr, "Processing brief picture to %s\n", outFileName);
 	int grs(max((w + 1) * max(n, m) / 1366 + 1, 4));
-	int bn(n * (w + 1) / grs + 1);
-	int bm(m * (w + 1) / grs + 1);
+	int bn(n * (w + 1) / grs + 2);
+	int bm(m * (w + 1) / grs + 2);
 	this->g = SimpleMM::i2alloc(bn, bm);
+	for (int i = 0; i < bn; ++ i) {
+		for (int j = 0; j < bm; ++ j) {
+			g[i][j] = 0;
+		}
+	}
 	for (LineArr::iterator it = this->lines.begin(); it != this->lines.end(); ++ it) {
 		int x1(POSX(it->first)), y1(POSY(it->first));
 		++ g[x1 / grs][y1 / grs];
@@ -49,6 +54,6 @@ void BriefGraphReporter::print(const char* fileName) {
 	c.write(fout);
 	fout.close();
 	fprintf(stderr, "Brief picture written to %s\n", outFileName);
-	SimpleMM::i2delete(this->g, this->n + 1);
+	SimpleMM::i2delete(this->g, bn);
 }
 
