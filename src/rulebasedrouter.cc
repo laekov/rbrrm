@@ -252,7 +252,7 @@ LineArr RuleBasedRouter::getModel() {
 			dp[3] = vi[i][j + 1];
 			detailBlock(res, i * (w + 1), j * (w + 1), dz, dp, (i ^ j)& 1);
 		}
-		fprintf(stderr, "\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10Details of row %d / %d resolved", i + 1, n);
+		fprintf(stderr, "\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10\10Details of row %d / %d resolved", i + 1, n);
 	}
 	fputc(10, stderr);
 	for (int i = 1; i < n; ++ i) {
