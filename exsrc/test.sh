@@ -1,9 +1,12 @@
-for ((i=2;i<=20;++i))
+for ((i=2;i<=40;++i))
 do
 	echo Running main
-	./main -n $i >1.out --no-pic
+	./main -n $i -detail >testd/main$i\.out
 	echo Running slow
-	./slow -n $i >2.out
+	./slow -n $i >testd/slow$i\.out
+done
+exit
+for ((i=2;i<=40;++i))
 	diff 1.out 2.out
 	if [ $? != 0 ]; then
 		echo $i Error

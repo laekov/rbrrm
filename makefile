@@ -2,13 +2,15 @@ cc = g++ -g -Isrc/include
 headers = $(wildcard src/include/*.hh)
 objects = $(headers:src/include/%.hh=obj/%.o)
 sources = $(headers:src/include/%.hh=src/%.cc)
+testsrc = $(wildcard test/*.cc)
+tests = $(testsrc:test/%.cc=bin/%)
 
 default : mkdir $(objects) bin/main
 
-bin/main : src/main.cc $(objects)
-	$(cc) src/main.cc $(objects) -o $@
+bin/% : src/%.cc $(objects)
+	$(cc) $< $(objects) -o $@
 
-obj/%.o : src/%.cc src/include/%.hh 
+obj/%.o : src/%.cc src/include/%.hh  $(headers)
 	$(cc) -c $< -o $@
 
 mkdir :

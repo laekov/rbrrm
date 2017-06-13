@@ -71,7 +71,8 @@ FlowSolver* RuleBasedRouter::buildGraph(int w) {
 bool RuleBasedRouter::check(int w) {
 	FlowSolver* fs(this->buildGraph(w));
 	bool ret(fs->maxFlow(this->st, this->te) == (n - 1) * (m - 1));
-	delete [] fs;
+	delete fs;
+	return ret;
 }
 
 int RuleBasedRouter::getMinWidth() {
@@ -108,7 +109,7 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j + 1 < w; ++ j) {
 			ga[i][j] = ++ tn, ++ tn;
-			et[ga[i][j]] = fs.addEdge(ga[i][j], ga[i][j] + 1, 1);
+			et[ga[i][j]] = fs.addEdge(ga[i][j], ga[i][j] + 1, 1, 1);
 			addDoubleEdge(di[i][j], ga[i][j], 1);
 			addDoubleEdge(di[i][j + 1], ga[i][j], 1);
 		}
@@ -116,7 +117,7 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 	for (int i = 0; i + 1 < w; ++ i) {
 		for (int j = 0; j < w; ++ j) {
 			gb[i][j] = ++ tn, ++ tn;
-			et[gb[i][j]] = fs.addEdge(gb[i][j], gb[i][j] + 1, 1);
+			et[gb[i][j]] = fs.addEdge(gb[i][j], gb[i][j] + 1, 1, 1);
 			addDoubleEdge(gb[i][j], di[i + 1][j], 1);
 			addDoubleEdge(gb[i][j], di[i][j], 1);
 		}
@@ -148,13 +149,13 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 					fs.addEdge(di[x][y] + 1, te, 1);
 				}
 				if (i == 0) {
-					res.push_back(LINEMK(POSMK(bx + x + 1, by + y), POSMK(bx + x + 1, by + y + 1)));
-				} else if (i == 1) {
-					res.push_back(LINEMK(POSMK(bx + x + 2, by + y), POSMK(bx + x + 2, by + y + 1)));
-				} else if (i == 2) {
 					res.push_back(LINEMK(POSMK(bx + x, by + y + 1), POSMK(bx + x + 1, by + y + 1)));
+				} else if (i == 1) {
+					res.push_back(LINEMK(POSMK(bx + x + 1, by + y + 1), POSMK(bx + x + 2, by + y + 1)));
+				} else if (i == 2) {
+					res.push_back(LINEMK(POSMK(bx + x + 1, by + y), POSMK(bx + x + 1, by + y + 1)));
 				} else if (i == 3) {
-					res.push_back(LINEMK(POSMK(bx + x, by + y + 2), POSMK(bx + x + 1, by + y + 2)));
+					res.push_back(LINEMK(POSMK(bx + x + 1, by + y + 1), POSMK(bx + x + 1, by + y + 2)));
 				}
 			} else if (dz[i]) {
 				fs.addEdge(st, di[x][y], 1);
@@ -175,14 +176,14 @@ void RuleBasedRouter::detailBlock(LineArr& res, int bx, int by, int* dz, int* dp
 	for (int i = 0; i < w; ++ i) {
 		for (int j = 0; j + 1 < w; ++ j) {
 			if (fs.isEdgeUsed(et[ga[i][j]], ga[i][j])) {
-				res.push_back(LINEMK(POSMK(bx + i + 1, by + j), POSMK(bx + i + 1, by + j + 1)));
+				res.push_back(LINEMK(POSMK(bx + i + 1, by + j + 1), POSMK(bx + i + 1, by + j + 2)));
 			}
 		}
 	}
 	for (int i = 0; i + 1 < w; ++ i) {
 		for (int j = 0; j < w; ++ j) {
 			if (fs.isEdgeUsed(et[gb[i][j]], gb[i][j])) {
-				res.push_back(LINEMK(POSMK(bx + i, by + j + 1), POSMK(bx + i + 1, by + j + 1)));
+				res.push_back(LINEMK(POSMK(bx + i + 1, by + j + 1), POSMK(bx + i + 2, by + j + 1)));
 			}
 		}
 	}
@@ -263,11 +264,16 @@ LineArr RuleBasedRouter::getModel() {
 						py = -1;
 						le = ose[hi[i][j - 1]];
 					}
-					res.push_back(LINEMK(POSMK(i * (w + 1) + px * le, j * (w + 1) + py * le), POSMK(i * (w + 1), j * (w + 1))));
+					int x(i * (w + 1)), y(j * (w + 1));
+					for (int k = 0; k < le; ++ k) {
+						res.push_back(LINEMK(POSMK(x + px, y + py), POSMK(x, y)));
+						x += px, y += py;
+					}
 				}
 			}
 		}
 	}
+	delete fs;
 	return res;
 }
 

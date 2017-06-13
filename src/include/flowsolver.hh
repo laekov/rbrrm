@@ -4,6 +4,7 @@
 #ifndef FLOW_SOLVER_HH
 #define FLOW_SOLVER_HH
 
+#include <cstdio>
 #include <cstring>
 #include <vector>
 
@@ -16,7 +17,7 @@ class FlowSolver {
 			Edge *ne, *rv;
 		};
 		Edge *epool, *ebuf, **head, **fe;
-		std::vector<Edge*> pools;
+		std::vector<Edge*>* pools;
 		int *vis, tvis;
 		int *d, *fr, st, te, *inq;
 		int delooped, tn;
@@ -25,7 +26,7 @@ class FlowSolver {
 				throw -1;
 			}
 			if (ebuf - epool == epoolsize) {
-				this->pools.push_back(ebuf = epool = new Edge[FlowSolver::epoolsize]);
+				this->pools->push_back(ebuf = epool = new Edge[FlowSolver::epoolsize]);
 			}
 			ebuf->t = v;
 			ebuf->c = c;
@@ -38,9 +39,10 @@ class FlowSolver {
 		bool BFS(int = 0);
 		int DFS(int, int);
 	public:
-		FlowSolver(int totNodes): pools() {
-			this->tn = totNodes += 7;
-			this->pools.push_back(this->ebuf = this->epool = new Edge[FlowSolver::epoolsize]);
+		FlowSolver(int totNodes) {
+			this->tn = (totNodes += 7, totNodes);
+			this->pools = new std::vector<Edge*>();
+			this->pools->push_back(this->ebuf = this->epool = new Edge[FlowSolver::epoolsize]);
 			this->head = new Edge*[totNodes];
 			memset(this->head, 0, totNodes * sizeof(Edge*));
 			this->fe = new Edge*[totNodes];
@@ -53,9 +55,10 @@ class FlowSolver {
 			memset(this->inq, 0, totNodes * sizeof(int));
 		}
 		~FlowSolver() {
-			for (std::vector<Edge*>::iterator it = this->pools.begin(); it != this->pools.end(); ++ it) {
+			for (std::vector<Edge*>::iterator it = this->pools->begin(); it != this->pools->end(); ++ it) {
 				delete [] *it;
 			}
+			delete this->pools;
 			delete [] this->head;
 			delete [] this->fe;
 			delete [] this->vis;

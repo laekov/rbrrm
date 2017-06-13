@@ -3,6 +3,8 @@ bin
 obj
 *.jpg
 *.ppm
+*.png
+*.out
 .in
 *.swp
 *.swo

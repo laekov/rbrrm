@@ -88,6 +88,8 @@ int FlowSolver::maxFlow(int st_, int te_) {
 
 int FlowSolver::minCost(int st_, int te_) {
 	int s(0), c(0);
+	st = st_, te = te_;
+	this->delooped = true;
 	while (SPFA()) {
 		int cc(FlowSolver::inf);
 		for (int u = te; u != st; u = fr[u]) {
@@ -98,6 +100,9 @@ int FlowSolver::minCost(int st_, int te_) {
 			s += fe[u]->w * cc;
 		}
 		c += cc;
+	}
+	for (int i = 1; i < this->tn; ++ i) {
+		vis[i] = tvis;
 	}
 	return s;
 }
