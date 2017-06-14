@@ -39,7 +39,7 @@ void BriefGraphReporter::print(const char* fileName) {
 		}
 	}
 	int bls(1366 / blc);
-	int rr = max(max(bls / (w + 1), 5) / 5, 1);
+	int rr = max(max(bls / (w + 1), 5) / 5, 0);
 	int picx(bls * bn), picy(bls * bm);
 	Canvas c(picx, picy);
 	c.lineWid = min(c.lineWid, bls / 2);
