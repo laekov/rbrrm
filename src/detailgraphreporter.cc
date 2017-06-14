@@ -9,8 +9,8 @@ using std::min;
 using std::max;
 
 void DetailGraphReporter::print(const char* fileName) {
-	if (max(n, m) * (w + 1) > 1400) {
-		fprintf(stderr, "Data scale not suitable to print brief picture. Not processing.\n");
+	if (max(n, m) * (w + 1) > 2800) {
+		fprintf(stderr, "Data scale not suitable to print detail picture. Not processing.\n");
 		return;
 	}
 	const char* outFileName(fileName ? fileName : "out.pnm");
