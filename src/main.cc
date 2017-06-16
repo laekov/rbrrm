@@ -13,6 +13,7 @@ int main(int argc, char* args[]) {
 	int outdetail(0);
 	int outbrief(0);
 	int outcoor(0);
+	int blx(-1), bly(-1);
 	char *briefName(0), *detailName(0), *coorName(0);
 	for (int i = 1; i < argc; ++ i) {
 		if (!strcmp(args[i], "-n") && i + 1 < argc) {
@@ -37,6 +38,11 @@ int main(int argc, char* args[]) {
 			if (i + 1 < argc) {
 				briefName = args[++ i];
 			}
+		} else if (!strcmp(args[i], "--out-block") && i + 3 < argc) {
+			getdetail = 2;
+			blx = atoi(args[++ i]);
+			bly = atoi(args[++ i]);
+			detailName = args[++ i];
 		} else if (!strcmp(args[i], "--detail")) {
 			getdetail = 1;
 		}
@@ -49,12 +55,16 @@ int main(int argc, char* args[]) {
 	printf("n = %d, m = %d\n", n, m);
 	int ans, totlen;
 	LineArr la;
-	Router* rbr(new RuleBasedRouter(n, m));
+	RuleBasedRouter* rbr(new RuleBasedRouter(n, m));
 	ans = rbr->getMinWidth();
 	printf("min width = %d\n", ans);
-	if (getdetail) {
+	if (getdetail == 1) {
 		totlen = (la = rbr->getModel()).size();
 		printf("total length = %d\n", totlen);
+	} else if (getdetail == 2) {
+		la = rbr->getBlockModel(blx, bly);
+		DetailGraphReporter dgr(1, 1, ans, la);
+		dgr.print(detailName);
 	}
 	if (outcoor) {
 		fprintf(stderr, "Printing coordinate file\n");

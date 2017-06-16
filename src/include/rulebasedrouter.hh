@@ -20,6 +20,7 @@ class RuleBasedRouter: public Router {
 	public:
 		int getMinWidth();
 		LineArr getModel();
+		LineArr getBlockModel(int, int);
 		RuleBasedRouter(int n_, int m_ = -1): Router(n_, m_) {
 			this->tn = (this->n + 1)*(this->m + 1)* 7 + 3;
 			this->ta = this->m + 3;

@@ -286,3 +286,41 @@ LineArr RuleBasedRouter::getModel() {
 	return res;
 }
 
+LineArr RuleBasedRouter::getBlockModel(int i, int j) {
+	LineArr res;
+	FlowSolver* fs(this->buildGraph(this->w));
+	fs->maxFlow(this->st, this->te);
+	memset(osa, 0, sizeof(int) * this->tn);
+	memset(ose, 0, sizeof(int) * this->tn);
+	int dz[8], dp[4];
+	for (FlowSolver::Edge* e = fs->head[ni[i][j]]; e; e = e->ne) {
+		if (e->t == hi[i][j] + 1) {
+			dz[0] = e->c;
+		} else if (e->t == hi[i + 1][j] + 1) {
+			dz[1] = e->c;
+		} else if (e->t == vi[i][j] + 1) {
+			dz[2] = e->c;
+		} else if (e->t == vi[i][j + 1] + 1) {
+			dz[3] = e->c;
+		}
+	}
+	for (FlowSolver::Edge* e = fs->head[ni[i][j] + 1]; e; e = e->ne) {
+		if (e->t == hi[i][j]) {
+			dz[4] = e->rv->c;
+		} else if (e->t == hi[i + 1][j]) {
+			dz[5] = e->rv->c;
+		} else if (e->t == vi[i][j]) {
+			dz[6] = e->rv->c;
+		} else if (e->t == vi[i][j + 1]) {
+			dz[7] = e->rv->c;
+		}
+	}
+	dp[0] = hi[i][j];
+	dp[1] = hi[i + 1][j];
+	dp[2] = vi[i][j];
+	dp[3] = vi[i][j + 1];
+	detailBlock(res, 0, 0, dz, dp, (i ^ j)& 1);
+	delete fs;
+	return res;
+}
+
